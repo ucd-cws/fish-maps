@@ -69,7 +69,7 @@
         // set up an object to use as a lookup table to convert from terse field
         // names to more user friendly field names
         app.fields = { 
-          "current_richness": "Current Richness", "HU_12_NAME":"HUC12 Name", "HUC_12":"HUC_12", "historic_richness":"Historical Richness", "native_qc_richness":"Native Richness", "div_native_qc":"Jaccard: Native Species", "div_all_qc":"Jaccard: All Species", "historic_assemblage":"Historical Assemblage", "losses_list":"Species Lost", "gains_list":"Species Gained"
+        "HU_12_NAME":"HUC12 Name", "HUC_12":"HUC_12", "native_qc_historic_richness":"Historical Richness", "native_qc_richness":"Native Richness", "nonnative_qc_richness":"Non-Native Richness", "div_native_qc":"Jaccard: Native Fish", "div_all_qc":"Jaccard: All Fish", "historic_assemblage":"Historical Assemblage", "losses_list":"Species Lost", "gains_list":"Species Gained"
         };
         
         app.map = new Map("map", { 
@@ -79,11 +79,12 @@
           slider: false
         });
 
+
           
         // various info for the feature layer
         app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichness/MapServer/0";
-        app.outFields = ["current_richness", "HUC_12", "HU_12_NAME", "historic_richness", "native_qc_richness", "div_native_qc", "div_all_qc", "historic_assemblage", "losses_list", "gains_list"];
-        app.currentAttribute = "current_richness";
+        app.outFields = ["HUC_12", "HU_12_NAME", "native_qc_historic_richness", "native_qc_richness", "nonnative_qc_richness", "div_native_qc", "div_all_qc", "historic_assemblage", "losses_list", "gains_list"];
+        app.currentAttribute = "native_qc_richness";
         app.popupTemplate = new PopupTemplate({
           title: "{HUC_12}: {HU_12_NAME}",
           fieldInfos: [{ 
@@ -142,15 +143,18 @@
           app.defaultFrom = Color.fromHex("#ffe98e");
           app.defaultTo = Color.fromHex("#ff684c");
           
-          createRenderer("current_richness");
+          createRenderer("native_qc_richness");
         });
         
         app.map.on("zoom-end", updateMaxOffset);
 
-        // create a store and a filtering select for the county layer's fields
+        // create a store and a filtering select for the layer's fields
         var fieldNames, fieldStore, fieldSelect;
         fieldNames = { "identifier": "value", "label": "name", "items": []};
-        arrayUtils.forEach(app.outFields, function(f) {
+        //array of fields to be selectable in dropdown menu  
+        app.selectable = [ "native_qc_richness",  "native_qc_historic_richness", "nonnative_qc_richness", "div_native_qc", "div_all_qc"];
+          
+        arrayUtils.forEach(app.selectable, function(f) {
           if ( arrayUtils.indexOf(f.split("_"), "NAME") == -1 ) { // exclude attrs that contain "NAME"
             fieldNames.items.push({ "name": app.fields[f], "value": f });
           }
