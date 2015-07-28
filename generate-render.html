@@ -65,11 +65,11 @@
         ItemFileReadStore, FilteringSelect
       ) {
         parser.parse();
-        // the counties map service uses the actual field name as the field alias
+        // the map service uses the actual field name as the field alias
         // set up an object to use as a lookup table to convert from terse field
         // names to more user friendly field names
         app.fields = { 
-          "current_richness": "Current Richness", "current_assemblage": "Current Assemblage"
+          "current_richness": "Current Richness", "HU_12_NAME":"HUC12 Name", "HUC_12":"HUC_12", "historic_richness":"Historical Richness", "native_qc_richness":"Native Richness", "div_native_qc":"Jaccard: Native Species", "div_all_qc":"Jaccard: All Species", "historic_assemblage":"Historical Assemblage", "losses_list":"Species Lost", "gains_list":"Species Gained"
         };
         
         app.map = new Map("map", { 
@@ -80,19 +80,33 @@
         });
 
           
-          
-          
-          
         // various info for the feature layer
         app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichness/MapServer/0";
-        //app.layerDef = "STATE_NAME = 'Washington'";
-        app.outFields = ["current_richness", "current_assemblage"];
+        app.outFields = ["current_richness", "HUC_12", "HU_12_NAME", "historic_richness", "native_qc_richness", "div_native_qc", "div_all_qc", "historic_assemblage", "losses_list", "gains_list"];
         app.currentAttribute = "current_richness";
         app.popupTemplate = new PopupTemplate({
-          title: "Richness {current_richness}",
+          title: "{HUC_12}: {HU_12_NAME}",
           fieldInfos: [{ 
             "fieldName": app.currentAttribute, 
             "label": app.fields[app.currentAttribute],
+            "visible": true, 
+            "format": { places: 0, digitSeparator: true } 
+          }, 
+        { 
+            "fieldName": "historic_assemblage", 
+            "label": "Historical Assemblage",
+            "visible": true, 
+            "format": { places: 0, digitSeparator: true } 
+          }, 
+            { 
+            "fieldName": "losses_list", 
+            "label": "Species Lost",
+            "visible": true, 
+            "format": { places: 0, digitSeparator: true } 
+          }, 
+            { 
+            "fieldName": "gains_list", 
+            "label": "Species Gained",
             "visible": true, 
             "format": { places: 0, digitSeparator: true } 
           }],
@@ -103,18 +117,17 @@
         // wait for map to load so the map's extent is available
         app.map.on("load", function() {
           app.wash = new FeatureLayer(app.Url, {
-            //"id": "Washington",
             "infoTemplate": app.popupTemplate,
             "maxAllowableOffset": maxOffset(),
             "mode": FeatureLayer.MODE_AUTO,
             "outFields": app.outFields,
-            "opacity": 0.8
+            "opacity": 0.6
           });
 
 
           // show selected attribute on click
           app.mapClick = app.wash.on("click", function(evt) {
-            var name = evt.graphic.attributes.NAME + " County",
+            var name = evt.graphic.attributes.NAME,
                 ca = app.currentAttribute,
                 content = app.fields[ca] + ": " + number.format(evt.graphic.attributes[ca]);
             app.map.infoWindow.setTitle(name);
@@ -126,8 +139,8 @@
           app.map.addLayer(app.wash);
 
           // colors for the renderer
-          app.defaultFrom = Color.fromHex("#998ec3");
-          app.defaultTo = Color.fromHex("#f1a340");
+          app.defaultFrom = Color.fromHex("#ffe98e");
+          app.defaultTo = Color.fromHex("#ff684c");
           
           createRenderer("current_richness");
         });
@@ -195,15 +208,33 @@
           app.map.infoWindow.hide();
           delete app.popupTemplate;
           app.popupTemplate = new PopupTemplate({
-            title: "{NAME} County",
-            fieldInfos: [{ 
-              "fieldName": ch, 
-              "label": app.fields[ch], 
-              "visible": true, 
-              "format": { places: 0, digitSeparator: true } 
-            }],
-            showAttachments: false
-          });
+          title: "{HUC_12}: {HU_12_NAME}",
+          fieldInfos: [{ 
+            "fieldName": ch, 
+            "label": app.fields[ch],
+            "visible": true, 
+            "format": { places: 0, digitSeparator: true } 
+          }, 
+        { 
+            "fieldName": "historic_assemblage", 
+            "label": "Historical Assemblage",
+            "visible": true, 
+            "format": { places: 0, digitSeparator: true } 
+          }, 
+            { 
+            "fieldName": "losses_list", 
+            "label": "Species Lost",
+            "visible": true, 
+            "format": { places: 0, digitSeparator: true } 
+          }, 
+            { 
+            "fieldName": "gains_list", 
+            "label": "Species Gained",
+            "visible": true, 
+            "format": { places: 0, digitSeparator: true } 
+          }],
+          showAttachments:true
+        });
           app.wash.setInfoTemplate(app.popupTemplate);
           app.currentAttribute = ch;
           createRenderer(ch);
@@ -225,7 +256,7 @@
             map : map,
             layerInfos : [{
               layer : fl,
-              title : "Census Attribute: " + app.fields[app.currentAttribute]
+              title : " "
             }]
           }, legendDiv);
           app.legend.startup();
@@ -256,16 +287,15 @@
            data-dojo-props="region:'center'">
 
         <div id="feedback">
-          <h3>Fish Richness in California</h3>
           <div id="info">
             <div id="note">
-              Note:  This sample requires an ArcGIS Server version 10.1 map service to generate a renderer.
-            </div>
-            Select a field to use to create a renderer.
+                <a href="http://pisces.ucdavis.edu/"><img src="pisces_2.png" alt="" id="logo" width="250px"></a>
+              </div>
+              <h3>Fish Richness in California</h3>
           </div>
           <div id="legendWrapper"></div>
           <div id="fieldWrapper">
-            Currently selected attribute:
+            Metric:
           </div>
         </div>
       </div>
