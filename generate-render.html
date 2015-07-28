@@ -81,20 +81,6 @@
 
           
           
-       /* var featureLayer = new FeatureLayer("http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRangeMaps/MegaRichness/MapServer/0", {
-          mode: FeatureLayer.MODE_ONDEMAND,
-          outFields: ["current_richness", "current_assemblage"],
-            
-          infoTemplate: infoTemplate
-        });  
-          
-        featureLayer.setAutoGeneralize(true);
-        featureLayer.setMaxAllowableOffset(1000);
-        
-        featureLayer.setRenderer(renderer);
-        map.addLayer(featureLayer);  
-          */
-          
           
           
         // various info for the feature layer
@@ -117,15 +103,14 @@
         // wait for map to load so the map's extent is available
         app.map.on("load", function() {
           app.wash = new FeatureLayer(app.Url, {
-            "id": "Washington",
+            //"id": "Washington",
             "infoTemplate": app.popupTemplate,
             "maxAllowableOffset": maxOffset(),
             "mode": FeatureLayer.MODE_AUTO,
             "outFields": app.outFields,
             "opacity": 0.8
           });
-          // apply a layer def to show only counties in Washington
-         // app.wash.setDefinitionExpression(app.layerDef);
+
 
           // show selected attribute on click
           app.mapClick = app.wash.on("click", function(evt) {
@@ -195,8 +180,8 @@
           var params = new GenerateRendererParameters();
           params.classificationDefinition = classDef;
           // limit the renderer to data being shown by the feature layer
-          params.where = app.layerDef; 
-          var generateRenderer = new GenerateRendererTask(app.countiesUrl);
+          //params.where = app.layerDef; 
+          var generateRenderer = new GenerateRendererTask(app.Url);
           generateRenderer.execute(params, applyRenderer, errorHandler);
         }
 
