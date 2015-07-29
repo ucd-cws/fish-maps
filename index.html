@@ -78,44 +78,40 @@
           zoom: 7,
           slider: false
         });
-
-
           
         // various info for the feature layer
-        app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichness/MapServer/0";
+        app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichnessNull/MapServer/0";
         app.outFields = ["HUC_12", "HU_12_NAME", "native_qc_historic_richness", "native_qc_richness", "nonnative_qc_richness", "div_native_qc", "div_all_qc", "historic_assemblage", "losses_list", "gains_list"];
         app.currentAttribute = "native_qc_richness";
+          
+        // initial popup  
         app.popupTemplate = new PopupTemplate({
           title: "{HUC_12}: {HU_12_NAME}",
           fieldInfos: [{ 
             "fieldName": app.currentAttribute, 
             "label": app.fields[app.currentAttribute],
             "visible": true, 
-            "format": { places: 0, digitSeparator: true } 
+            //"format": { places: 0, digitSeparator: true } // sig figs in popup
           }, 
         { 
             "fieldName": "historic_assemblage", 
             "label": "Historical Assemblage",
-            "visible": true, 
-            "format": { places: 0, digitSeparator: true } 
+            "visible": true 
           }, 
             { 
             "fieldName": "losses_list", 
             "label": "Species Lost",
-            "visible": true, 
-            "format": { places: 0, digitSeparator: true } 
+            "visible": true 
           }, 
             { 
             "fieldName": "gains_list", 
             "label": "Species Gained",
-            "visible": true, 
-            "format": { places: 0, digitSeparator: true } 
+            "visible": true  
           }],
           showAttachments:true
         });
         
-        // create a feature layer 
-        // wait for map to load so the map's extent is available
+        // create a feature layer and wait for map to load so the map's extent is available
         app.map.on("load", function() {
           app.wash = new FeatureLayer(app.Url, {
             "infoTemplate": app.popupTemplate,
@@ -217,25 +213,22 @@
             "fieldName": ch, 
             "label": app.fields[ch],
             "visible": true, 
-            "format": { places: 0, digitSeparator: true } 
+            //"format": { places: 0, digitSeparator: true } // controls sig figs visible in popup
           }, 
         { 
             "fieldName": "historic_assemblage", 
             "label": "Historical Assemblage",
-            "visible": true, 
-            "format": { places: 0, digitSeparator: true } 
+            "visible": true
           }, 
             { 
             "fieldName": "losses_list", 
             "label": "Species Lost",
-            "visible": true, 
-            "format": { places: 0, digitSeparator: true } 
+            "visible": true
           }, 
             { 
             "fieldName": "gains_list", 
             "label": "Species Gained",
-            "visible": true, 
-            "format": { places: 0, digitSeparator: true } 
+            "visible": true
           }],
           showAttachments:true
         });
@@ -244,6 +237,7 @@
           createRenderer(ch);
           createLegend(app.map, app.wash);
         }
+          
 
         function createLegend(map, fl) {
           // destroy previous legend, if present
