@@ -106,21 +106,28 @@
                 "gains_list": "Species Gained"
             };
 
+            // get keys from the field list lookup table object
+            app.outFields = Object.keys(app.fields)
+            
+            // various info for the feature layer
+            app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichnessNull/MapServer/0";
+
+            // default attribute to load  
+            app.currentAttribute = "native_qc_richness";
+            
+            // selectable attributes - must be in app.outFields
+            // TODO: make this a part of the field object            
+            //array of fields to be selectable in dropdown menu  
+            app.selectable = ["native_qc_richness", "native_qc_historic_richness", "nonnative_qc_richness", "div_native_qc", "div_all_qc"];
+
+            // map constructor
             app.map = new Map("map", {
                 basemap: "oceans",
                 center: [-120.45, 37.75],
                 zoom: 7,
                 slider: false
             });
-
-            // various info for the feature layer
-            app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichnessNull/MapServer/0";
-            app.outFields = ["HUC_12", "HU_12_NAME", "native_qc_historic_richness", "native_qc_richness", "nonnative_qc_richness", "div_native_qc", "div_all_qc", "historic_assemblage", "losses_list", "gains_list"];
-
-            // default attribute to load  
-            app.currentAttribute = "native_qc_richness";
-
-
+            
             // create a feature layer and wait for map to load so the map's extent is available
             app.map.on("load", function() {
                 app.wash = new FeatureLayer(app.Url, {
@@ -141,7 +148,7 @@
             });
 
             app.map.on("zoom-end", updateMaxOffset);
-
+  
             // create a store and a filtering select for the layer's fields
             var fieldNames, fieldStore, fieldSelect;
             fieldNames = {
@@ -149,9 +156,7 @@
                 "label": "name",
                 "items": []
             };
-            //array of fields to be selectable in dropdown menu  
-            app.selectable = ["native_qc_richness", "native_qc_historic_richness", "nonnative_qc_richness", "div_native_qc", "div_all_qc"];
-
+        
             arrayUtils.forEach(app.selectable, function(f) {
                 if (arrayUtils.indexOf(f.split("_"), "NAME") == -1) { // exclude attrs that contain "NAME"
                     fieldNames.items.push({
@@ -179,6 +184,7 @@
             }, domConstruct.create("div", null, dom.byId("fieldWrapper")));
             fieldSelect.on("change", updateAttribute);
 
+       // helper functions     
             function createRenderer(field) {
                 app.sfs = new SimpleFillSymbol(
                     SimpleFillSymbol.STYLE_SOLID,
@@ -207,13 +213,13 @@
                 var generateRenderer = new GenerateRendererTask(app.Url);
                 generateRenderer.execute(params, applyRenderer, errorHandler);
             }
-
+            
             function applyRenderer(renderer) {
                 app.wash.setRenderer(renderer);
                 app.wash.redraw();
                 createLegend(app.map, app.wash);
             }
-
+            
             function updateAttribute(ch) {
                 // things that get updated when a new metric is picked
                 app.map.infoWindow.hide();
@@ -223,7 +229,7 @@
                 createRenderer(ch);
                 createLegend(app.map, app.wash);
             }
-
+            
             function createPopup(cfield) {
                 // creates a popup
                 delete app.popupTemplate;
