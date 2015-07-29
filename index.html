@@ -85,6 +85,7 @@
         app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichness/MapServer/0";
         app.outFields = ["HUC_12", "HU_12_NAME", "native_qc_historic_richness", "native_qc_richness", "nonnative_qc_richness", "div_native_qc", "div_all_qc", "historic_assemblage", "losses_list", "gains_list"];
         app.currentAttribute = "native_qc_richness";
+        
         app.popupTemplate = new PopupTemplate({
           title: "{HUC_12}: {HU_12_NAME}",
           fieldInfos: [{ 
@@ -125,7 +126,11 @@
             "opacity": 0.6
           });
 
-
+        //Definition expression to exclude values exclude zeros?  NOTE: messes up Jaccard
+        app.layerDef = app.currentAttribute + " > 0";
+        app.wash.setDefinitionExpression(app.layerDef);
+            
+            
           // show selected attribute on click
           app.mapClick = app.wash.on("click", function(evt) {
             var name = evt.graphic.attributes.NAME,
@@ -197,7 +202,7 @@
           var params = new GenerateRendererParameters();
           params.classificationDefinition = classDef;
           // limit the renderer to data being shown by the feature layer
-          //params.where = app.layerDef; 
+          params.where = app.layerDef; 
           var generateRenderer = new GenerateRendererTask(app.Url);
           generateRenderer.execute(params, applyRenderer, errorHandler);
         }
@@ -241,6 +246,7 @@
         });
           app.wash.setInfoTemplate(app.popupTemplate);
           app.currentAttribute = ch;
+          app.layerDef = ch + " > 0";
           createRenderer(ch);
           createLegend(app.map, app.wash);
         }
