@@ -127,8 +127,9 @@
           });
 
         //Definition expression to exclude values exclude zeros?  NOTE: messes up Jaccard
-        app.layerDef = app.currentAttribute + " > 0";
+        if(app.currentAttribute == "div_native_qc" || app.currentAttribute == "div_all_qc" ){app.layerDef = null} else {app.layerDef = app.currentAttribute + " > 0"};
         app.wash.setDefinitionExpression(app.layerDef);
+        
             
             
           // show selected attribute on click
@@ -246,7 +247,8 @@
         });
           app.wash.setInfoTemplate(app.popupTemplate);
           app.currentAttribute = ch;
-          app.layerDef = ch + " > 0";
+          if(app.currentAttribute == "div_native_qc"  || app.currentAttribute == "div_all_qc"  ){app.layerDef = null} else {app.layerDef = app.currentAttribute + " > 0"};
+          app.wash.setDefinitionExpression(app.layerDef);
           createRenderer(ch);
           createLegend(app.map, app.wash);
         }
