@@ -4,10 +4,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
-    <title></title>
+    <title>PISCES: Richness Map</title>
 
     <link rel="stylesheet" href="http://js.arcgis.com/3.14/dijit/themes/tundra/tundra.css">
     <link rel="stylesheet" href="http://js.arcgis.com/3.14/esri/css/esri.css">
+    <link rel="shortcut icon" href="http://pisces.ucdavis.edu/files/fav_watershed.gif" type="image/gif" />
+
 
     <style>
         html,
@@ -41,7 +43,7 @@
         }
         
         #legendWrapper {
-            padding: 20px 0 0 0;
+            padding: 0px 0 0 0;
         }
         
         #note {
@@ -50,10 +52,22 @@
             padding: 0 0 10px 0;
         }
         
+        #loading {
+            visibility: hidden;
+            position: absolute;
+            margin: auto;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+        
         h3 {
             margin: 0 0 5px 0;
             border-bottom: 1px solid #444;
         }
+
     </style>
 
     <script src="http://js.arcgis.com/3.14/"></script>
@@ -67,8 +81,8 @@
             "esri/tasks/GenerateRendererParameters", "esri/tasks/GenerateRendererTask",
             "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol",
             "esri/dijit/PopupTemplate", "esri/dijit/Legend",
-            "dojo/parser", "dojo/_base/array", "esri/Color",
-            "dojo/dom", "dojo/dom-construct", "dojo/number",
+            "dojo/parser", "dojo/_base/array", "esri/Color", "dojo/on",
+            "dojo/dom", "dojo/dom-construct", "dojo/number", "dojo/dom-style",
             "dojo/data/ItemFileReadStore", "dijit/form/FilteringSelect",
             "dijit/layout/BorderContainer", "dijit/layout/ContentPane",
             "dojo/domReady!"
@@ -80,7 +94,7 @@
             SimpleLineSymbol, SimpleFillSymbol,
             PopupTemplate, Legend,
             parser, arrayUtils, Color,
-            dom, domConstruct, number,
+            on, dom, domConstruct, number, domStyle,
             ItemFileReadStore, FilteringSelect
         ) {
             parser.parse();
@@ -102,13 +116,13 @@
 
             // get keys from the field list lookup table object
             app.outFields = Object.keys(app.fields)
-            
+
             // various info for the feature layer
             app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichnessNull/MapServer/0";
-            
+
             // default attribute to load  
             app.currentAttribute = "native_qc_richness";
-            
+
             // selectable attributes - must be in app.outFields
             // TODO: make this a part of the field object            
             //array of fields to be selectable in dropdown menu  
@@ -121,10 +135,13 @@
                 zoom: 7,
                 slider: false
             });
-            
+
+            //domStyle.set("loading", "visibility", "visible");
+
             // create a feature layer and wait for map to load so the map's extent is available
             app.map.on("load", function() {
-                app.rich = new FeatureLayer(app.Url, {
+                domStyle.set("loading", "visibility", "visible");
+                rich = new FeatureLayer(app.Url, {
                     "infoTemplate": createPopup(app.currentAttribute),
                     "maxAllowableOffset": maxOffset(),
                     "mode": FeatureLayer.MODE_AUTO,
@@ -132,10 +149,10 @@
                     "opacity": 0.7
                 });
 
-                 app.map.addLayer(app.rich);
-                
+                app.map.addLayer(rich);
+
                 // supplementalmap service layers
-               /* var layer = new esri.layers.ArcGISTiledMapServiceLayer(
+                /* var layer = new esri.layers.ArcGISTiledMapServiceLayer(
                     "http://hydrology.esri.com/arcgis/rest/services/WorldHydroReferenceOverlay/MapServer");
                 app.map.addLayer(layer);
               var resizeTimer;
@@ -149,16 +166,16 @@
                    });
                  });
                  */
-                
+
                 // colors for the renderer
                 app.defaultFrom = Color.fromHex("#ffe98e");
                 app.defaultTo = Color.fromHex("#ff684c");
 
                 createRenderer(app.currentAttribute);
             });
-                        
+
             app.map.on("zoom-end", updateMaxOffset);
-  
+
             // create a store and a filtering select for the layer's fields
             var fieldNames, fieldStore, fieldSelect;
             fieldNames = {
@@ -166,13 +183,14 @@
                 "label": "name",
                 "items": []
             };
-        
+
             arrayUtils.forEach(app.selectable, function(f) {
-                    fieldNames.items.push({
-                        "name": app.fields[f],
-                        "value": f});
+                fieldNames.items.push({
+                    "name": app.fields[f],
+                    "value": f
+                });
             });
-            
+
             fieldStore = new ItemFileReadStore({
                 data: fieldNames
             });
@@ -191,7 +209,21 @@
             }, domConstruct.create("div", null, dom.byId("fieldWrapper")));
             fieldSelect.on("change", updateAttribute);
 
-       // helper functions     
+
+
+
+            // hide the loading icon when the counties layer finishes updating
+            app.map.on("update-end", function() {
+                domStyle.set("loading", "visibility", "hidden");
+            });
+
+
+            app.map.on("zoom-start", function() {
+                domStyle.set("loading", "visibility", "visible");
+            });
+
+
+            // helper functions     
             function createRenderer(field) {
                 app.sfs = new SimpleFillSymbol(
                     SimpleFillSymbol.STYLE_SOLID,
@@ -220,22 +252,22 @@
                 var generateRenderer = new GenerateRendererTask(app.Url);
                 generateRenderer.execute(params, applyRenderer, errorHandler);
             }
-            
+
             function applyRenderer(renderer) {
-                app.rich.setRenderer(renderer);
-                app.rich.redraw();
-                createLegend(app.map, app.rich);
+                rich.setRenderer(renderer);
+                rich.redraw();
+                createLegend(app.map, rich);
             }
-            
+
             function updateAttribute(ch) {
                 // things that get updated when a new metric is picked
                 app.map.infoWindow.hide();
-                app.rich.setInfoTemplate(createPopup(ch));
+                rich.setInfoTemplate(createPopup(ch));
                 app.currentAttribute = ch;
                 createRenderer(ch);
-                createLegend(app.map, app.rich);
+                createLegend(app.map, rich);
             }
-            
+
             function createPopup(cfield) {
                 // creates a popup
                 delete app.popupTemplate;
@@ -287,7 +319,7 @@
 
             function updateMaxOffset() {
                 var offset = maxOffset();
-                app.rich.setMaxAllowableOffset(offset);
+                rich.setMaxAllowableOffset(offset);
             }
 
             function maxOffset() {
@@ -298,23 +330,25 @@
                 console.log('Oops, error: ', err);
             }
         });
+
     </script>
 </head>
 
 <body class="tundra">
     <div data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design:'headline',gutters:false" style="width: 100%; height: 100%; margin: 0;">
         <div id="map" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'center'">
-
+            <img id="loading" src="img/loading.svg" />
             <div id="feedback">
                 <div id="info">
                     <div id="note">
-                        <a href="http://pisces.ucdavis.edu/"><img src="pisces_2.png" alt="" id="logo" width="250px"></a>
+                        <a href="http://pisces.ucdavis.edu/"><img src="img/pisces_2.png" alt="" id="logo" width="250px"></a>
                     </div>
                     <h3>Fish Richness in California</h3>
-                </div>
-                <div id="legendWrapper"></div>
-                <div id="fieldWrapper">
-                    Metric:
+
+                    <div id="legendWrapper"></div>
+                    <div id="fieldWrapper">
+                        Metric:
+                    </div>
                 </div>
             </div>
         </div>
@@ -322,4 +356,3 @@
 </body>
 
 </html>
-
