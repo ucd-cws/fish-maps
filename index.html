@@ -345,7 +345,7 @@
     </script>
 </head>
 
-<body class="tundra">
+<body class="tundra" onload="load()">
     <!-- /.modal -->
 
 
@@ -361,9 +361,22 @@
                 <div class="modal-body">
 
 
-                    <p>Click on each watershed to bring up a list of the historical species assemblage, species lost or extripated, and species gained or transolated in the HUC12. </p>
 
-                    <p>Use the drop down menu to select the number of freshwater species in each watershed (Native Richness), the number of species historically (pre - 1970) in each watershed (Historical Richness), the number of non-native species in each watershed (Non-native Richness), the Jaccard diversity distance for native species or the Jacarrd Diversity Distance for historical species.</p>
+
+                    <p>Use the drop down menu to select one of the following richness metrics:</p>
+
+                    <ul>
+                        <li><strong>Native Richness</strong> - the number of native species in each watershed (HUC12). Fish that are translocated or relocated outside of their native range are included in the total only if they are native species to California.</li>
+                        <li><strong>Historical Richness</strong> - the number of fish species historically (pre-1970s) found in each watershed prior to extripations and/or extinctions.</li>
+                        <li><strong>Non-native Richness</strong> - the number of non-native species in each watershed. This only includes fish species that are nonendemic to California. A non-native species is any fish that occurs outside its native range as a result of deliberate or accidental introduction by humans. </li>
+                        <li><strong>Jaccard: Native Fish</strong> - the Jaccard distance for the native fish assemblage in each watershed. Jaccard distance is a measure of similarity of adjacent populations.</li>
+                        <li><strong>Jaccard: All Fish</strong> - the Jaccard distance for the current assemblage (both native and non-native fish) in each watershed. </li>
+                    </ul>
+
+
+                    <p>Click on each HUC12 to view the assemblage list for the watershed.</p>
+
+
                     <div style="text-align: center; display: block; margin: auto;">
                         <a href="http://pisces.ucdavis.edu/"><img src="img/pisces_2.png" alt="" id="logo" width="250px"></a>
                     </div>
@@ -387,7 +400,7 @@
 
     <script type="text/javascript">
         $(window).load(function() {
-            $('#myModal').modal('show');
+            $('#myModal').modal('hide'); // or 'show'
         });
 
     </script>
