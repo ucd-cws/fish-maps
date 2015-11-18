@@ -1,0 +1,55 @@
+ html,
+ body {
+     height: 100%;
+     width: 100%;
+     margin: 0;
+     padding: 0;
+ }
+ #map {
+     margin: 0;
+     padding: 0;
+ }
+ #feedback {
+     position: absolute;
+     height: 300px;
+     width: 220px;
+     font-family: arial;
+     margin: 5px;
+     padding: 10px;
+     z-index: 40;
+     background-color: rgba(248, 248, 248, .8);
+     color: #444;
+     left: 30px;
+     top: 30px;
+     -moz-box-shadow: 0 0 5px #888;
+     -webkit-box-shadow: 0 0 5px #888;
+     box-shadow: 0 0 5px #888;
+ }
+ #legendWrapper {
+     padding: 0px 0 0 0;
+ }
+ #loading {
+     visibility: hidden;
+     width: 0px;
+     height: 0px;
+     margin: auto;
+     padding: 10px;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     position: absolute;
+     z-index: 100;
+     opacity: 0.3;
+ }
+ #help {
+     position: absolute;
+     left: 0;
+     bottom: 0;
+     z-index: 100;
+     padding: 10px;
+ }
+ h3 {
+     margin: 0 0 5px 0;
+     border-bottom: 1px solid #444;
+ }
