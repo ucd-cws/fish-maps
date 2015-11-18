@@ -2,9 +2,8 @@
 
 // one global for persistent app variables
 var app = {};
-require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/FeatureLayer", "esri/tasks/ClassBreaksDefinition", "esri/tasks/AlgorithmicColorRamp", "esri/tasks/GenerateRendererParameters", "esri/tasks/GenerateRendererTask", "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/dijit/PopupTemplate", "esri/dijit/Legend", "dojo/parser", "dojo/_base/array", "esri/Color", "dojo/on", "dojo/dom", "dojo/dom-construct", "dojo/number", "dojo/dom-style", "dojo/data/ItemFileReadStore", "dijit/form/FilteringSelect", "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dojo/domReady!"], function (
+require(["esri/map", "esri/layers/FeatureLayer", "esri/tasks/ClassBreaksDefinition", "esri/tasks/AlgorithmicColorRamp", "esri/tasks/GenerateRendererParameters", "esri/tasks/GenerateRendererTask", "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/dijit/PopupTemplate", "esri/dijit/Legend", "dojo/parser", "dojo/_base/array", "esri/Color", "dojo/on", "dojo/dom", "dojo/dom-construct", "dojo/number", "dojo/dom-style", "dojo/data/ItemFileReadStore", "dijit/form/FilteringSelect", "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dojo/domReady!"], function (
     Map,
-    ArcGISTiledMapServiceLayer,
     FeatureLayer,
     ClassBreaksDefinition,
     AlgorithmicColorRamp,
@@ -26,6 +25,13 @@ require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/Feat
     FilteringSelect
 ) {
     parser.parse();
+
+    // URL for the feature layer
+    app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichnessNull/MapServer/0";
+
+    // default attribute to load  
+    app.currentAttribute = "native_qc_richness";
+
     // the map service uses the actual field name as the field alias
     // set up an object to use as a lookup table to convert from terse field
     // names to more user friendly field names
@@ -42,68 +48,18 @@ require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/Feat
         "gains_list": "Species Gained"
     };
 
+
+
+    //////// selectable fields ///////////
+
     // get keys from the field list lookup table object
-    app.outFields = Object.keys(app.fields)
+    app.outFields = Object.keys(app.fields);
 
-    // various info for the feature layer
-    app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichnessNull/MapServer/0";
-
-    // default attribute to load  
-    app.currentAttribute = "native_qc_richness";
-
-    // selectable attributes - must be in app.outFields
-    // TODO: make this a part of the field object            
-    //array of fields to be selectable in dropdown menu  
+    //array of fields to be selectable in dropdown menu  - must be in app.outFields          
     app.selectable = ["native_qc_richness", "native_qc_historic_richness", "nonnative_qc_richness", "div_native_qc", "div_all_qc"];
 
-    // map constructor
-    app.map = new Map("map", {
-        basemap: "oceans",
-        center: [-121.45, 38.0],
-        zoom: 7,
-        slider: false
-    });
-
-    //domStyle.set("loading", "visibility", "visible");
-
-    // create a feature layer and wait for map to load so the map's extent is available
-    app.map.on("load", function () {
-        domStyle.set("loading", "visibility", "visible");
-        rich = new FeatureLayer(app.Url, {
-            "infoTemplate": createPopup(app.currentAttribute),
-            "maxAllowableOffset": maxOffset(),
-            "mode": FeatureLayer.MODE_AUTO,
-            "outFields": app.outFields,
-            "opacity": 0.7
-        });
-
-        app.map.addLayer(rich);
-
-
-
-        createRenderer(app.currentAttribute);
-    });
-
-    // Update max offset when zoom finishes
-    app.map.on("zoom-end", updateMaxOffset);
-
-    // hide the loading icon when the counties layer finishes updating
-    app.map.on("update-end", function () {
-        domStyle.set("loading", "visibility", "hidden");
-    });
-    app.map.on("zoom-start", function () {
-        domStyle.set("loading", "visibility", "visible");
-    });
-
-
-
-    // colors for the renderer
-    app.defaultFrom = Color.fromHex("#ffe98e");
-    app.defaultTo = Color.fromHex("#ff684c");
-
     // create a store and a filtering select for the layer's fields
-    var fieldNames, fieldStore, fieldSelect;
-    fieldNames = {
+    var fieldNames = {
         "identifier": "value",
         "label": "name",
         "items": []
@@ -116,10 +72,10 @@ require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/Feat
         });
     });
 
-    fieldStore = new ItemFileReadStore({
+    var fieldStore = new ItemFileReadStore({
         data: fieldNames
     });
-    fieldSelect = new FilteringSelect({
+    var fieldSelect = new FilteringSelect({
         displayedValue: fieldNames.items[0].name,
         value: fieldNames.items[0].value,
         name: "fieldsFS",
@@ -135,7 +91,16 @@ require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/Feat
     fieldSelect.on("change", updateAttribute);
 
 
-    // helper functions     
+    ///////////////////////// helper functions     ///////////////////////////
+
+    // apply the render on the richness layer, force redraw, create new legend
+    function applyRenderer(renderer) {
+        rich.setRenderer(renderer);
+        rich.redraw();
+        createLegend(app.map, rich);
+    }
+
+    // create a render for a field
     function createRenderer(field) {
         app.sfs = new SimpleFillSymbol(
             SimpleFillSymbol.STYLE_SOLID,
@@ -153,11 +118,10 @@ require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/Feat
         classDef.baseSymbol = app.sfs;
 
         var colorRamp = new AlgorithmicColorRamp();
-        colorRamp.fromColor = app.defaultFrom;
-        colorRamp.toColor = app.defaultTo;
+        colorRamp.fromColor = Color.fromHex("#ffe98e"); // colors for the renderer
+        colorRamp.toColor = Color.fromHex("#ff684c"); // colors for the renderer
         colorRamp.algorithm = "hsv"; // options are:  "cie-lab", "hsv", "lab-lch"
         classDef.colorRamp = colorRamp;
-
         var params = new GenerateRendererParameters();
         params.classificationDefinition = classDef;
         //params.where = app.layerDef; //app.layerDef not needed if fishless hucs have Nulls instead of zeros
@@ -165,14 +129,10 @@ require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/Feat
         generateRenderer.execute(params, applyRenderer, errorHandler);
     }
 
-    function applyRenderer(renderer) {
-        rich.setRenderer(renderer);
-        rich.redraw();
-        createLegend(app.map, rich);
-    }
 
+
+    // things that get updated when a new metric is picked
     function updateAttribute(ch) {
-        // things that get updated when a new metric is picked
         app.map.infoWindow.hide();
         rich.setInfoTemplate(createPopup(ch));
         app.currentAttribute = ch;
@@ -229,17 +189,44 @@ require(["esri/map", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/Feat
         app.legend.startup();
     }
 
-    function updateMaxOffset() {
-        var offset = maxOffset();
-        rich.setMaxAllowableOffset(offset);
-        console.log("NEW offset", offset);
-    }
-
-    function maxOffset() {
-        return (app.map.extent.getWidth() / app.map.width);
-    }
 
     function errorHandler(err) {
         console.log('Oops, error: ', err);
     }
+
+
+
+    // map constructor
+    app.map = new Map("map", {
+        basemap: "oceans",
+        center: [-121.45, 38.0],
+        zoom: 7,
+        slider: false
+    });
+
+
+    // create a feature layer and wait for map to load so the map's extent is available
+    app.map.on("load", function () {
+        domStyle.set("loading", "visibility", "visible");
+        rich = new FeatureLayer(app.Url, {
+            infoTemplate: createPopup(app.currentAttribute),
+            mode: FeatureLayer.MODE_AUTO,
+            outFields: app.outFields,
+            opacity: 0.7
+        });
+
+        app.map.addLayer(rich);
+        createRenderer(app.currentAttribute);
+    });
+
+    // hide the loading icon when the counties layer finishes updating
+    app.map.on("update-end", function () {
+        domStyle.set("loading", "visibility", "hidden");
+    });
+    app.map.on("zoom-start", function () {
+        domStyle.set("loading", "visibility", "visible");
+    });
+
+
+
 });
