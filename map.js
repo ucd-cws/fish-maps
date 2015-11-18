@@ -27,7 +27,8 @@ require(["esri/map", "esri/layers/FeatureLayer", "esri/tasks/ClassBreaksDefiniti
     parser.parse();
 
     // URL for the feature layer
-    app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichnessNull/MapServer/0";
+    //app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichnessNull/MapServer/0";
+    app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/diversity/MapServer/0";
 
     // default attribute to load  
     app.currentAttribute = "native_qc_richness";
@@ -43,9 +44,9 @@ require(["esri/map", "esri/layers/FeatureLayer", "esri/tasks/ClassBreaksDefiniti
         "nonnative_qc_richness": "Non-Native Richness",
         "div_native_qc": "Jaccard: Native Fish",
         "div_all_qc": "Jaccard: All Fish",
-        "historic_assemblage": "Historical Assemblage",
-        "losses_list": "Species Lost",
-        "gains_list": "Species Gained"
+        "historic_assemblage_Native_Fish": "Historical Assemblage",
+        "losses_Fish_list": "Species Lost",
+        "gains_Fish_list": "Species Gained"
     };
 
 
@@ -151,15 +152,15 @@ require(["esri/map", "esri/layers/FeatureLayer", "esri/tasks/ClassBreaksDefiniti
                 "visible": true,
                 //"format": { places: 0, digitSeparator: true } // controls sig figs visible in popup
                     }, {
-                "fieldName": "historic_assemblage",
+                "fieldName": "historic_assemblage_Native_Fish",
                 "label": "Historical Assemblage",
                 "visible": true
                     }, {
-                "fieldName": "losses_list",
+                "fieldName": "losses_Fish_list",
                 "label": "Species Lost",
                 "visible": true
                     }, {
-                "fieldName": "gains_list",
+                "fieldName": "gains_Fish_list",
                 "label": "Species Gained",
                 "visible": true
                     }],
