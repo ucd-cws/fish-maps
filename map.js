@@ -27,7 +27,6 @@ require(["esri/map", "esri/layers/FeatureLayer", "esri/tasks/ClassBreaksDefiniti
     parser.parse();
 
     // URL for the feature layer
-    //app.Url = "http://atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/MegaRichnessNull/MapServer/0";
     app.Url = "//atlas.cws.ucdavis.edu/arcgis/rest/services/PISCESRichness/diversity/MapServer/0";
 
     // default attribute to load  
